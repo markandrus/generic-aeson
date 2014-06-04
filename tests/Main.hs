@@ -118,6 +118,12 @@ instance FromJSON W where parseJSON = gparseJson
 testW :: (Value, Either String W)
 testW = (toJSON (W 1 2), i (W 1 2))
 
+data X = X (Maybe Int) deriving (Generic, Show, Eq)
+instance ToJSON   X where toJSON = gtoJson
+instance FromJSON X where parseJSON = gparseJson
+testX :: (Value, Value, Either String X, Either String X)
+testX = (toJSON (X Nothing), toJSON (X (Just 1)), i (X Nothing), i (X (Just 1)))
+
 i :: (FromJSON a, ToJSON a) => a -> Either String a
 i a = case (parse value . encode) a of
   Done _ r -> case fromJSON r of A.Success v -> Right v; Error s -> Left $ "fromJSON r=" ++ show r ++ ", s=" ++ s
@@ -142,6 +148,7 @@ tests = TestList
   , TestCase $ assertEqual "testT" (f "{}", f "{\"r1\":1}",Right (T {r1 = Nothing}),Right (T {r1 = Just 1})) testT
   , TestCase $ assertEqual "testV" (f "\"v1\"",f "\"v2\"",Right V1,Right V2) testV
   , TestCase $ assertEqual "testW" (f "{\"underscore1\":1,\"underscore2\":2}",Right (W {underscore1_ = 1, _underscore2 = 2})) testW
+--  , TestCase $ assertEqual "testX" (f "null", f "1", Right (X Nothing), Right (X (Just 1))) testX
   ]
   where
   f :: ByteString -> Value
